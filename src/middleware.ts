@@ -17,29 +17,34 @@ export async function middleware(request: NextRequest) {
   let isAuthenticated = false;
 
   if (isSupabase) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
+    try {
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return request.cookies.getAll();
+            },
+            setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
+              cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+              response = NextResponse.next({
+                request,
+              });
+              cookiesToSet.forEach(({ name, value, options }) =>
+                response.cookies.set(name, value, options)
+              );
+            },
           },
-          setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
+        }
+      );
 
-    const { data: { user } } = await supabase.auth.getUser();
-    isAuthenticated = Boolean(user);
+      const { data: { user } } = await supabase.auth.getUser();
+      isAuthenticated = Boolean(user);
+    } catch (err) {
+      console.error('Middleware Supabase Auth check error:', err);
+      isAuthenticated = false;
+    }
   } else {
     const localSession = request.cookies.get(LOCAL_COOKIE_NAME)?.value;
     isAuthenticated = Boolean(localSession);

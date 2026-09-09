@@ -5,17 +5,13 @@ import { Account, Category, Transaction, TransactionAttachment, Profile } from '
 import { formatTransactionNumber, calculateAccountBalances } from '@/lib/finance-math';
 import { TransactionInput, AccountInput, CategoryInput } from '@/lib/validations/finance';
 
-const require = createRequire(import.meta.url);
-const { DatabaseSync } = require('node:sqlite');
-type DatabaseSyncType = InstanceType<typeof DatabaseSync>;
+let _dbInstance: any = null;
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'finance.db');
-
-let _dbInstance: DatabaseSyncType | null = null;
-
-export function getDb(): DatabaseSyncType {
+export function getDb(): any {
   if (_dbInstance) return _dbInstance;
+
+  const require = createRequire(import.meta.url);
+  const { DatabaseSync } = require('node:sqlite');
 
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });

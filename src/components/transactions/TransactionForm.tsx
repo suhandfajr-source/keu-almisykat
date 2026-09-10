@@ -10,8 +10,7 @@ import {
   FileText, 
   AlertCircle,
   Camera,
-  Trash2,
-  Plus
+  Trash2
 } from 'lucide-react';
 import { Account, Category, Transaction } from '@/types/finance';
 import { formatRupiah, parseRupiahInput } from '@/lib/finance-math';

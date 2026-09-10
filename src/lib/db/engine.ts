@@ -5,6 +5,10 @@ import { Account, Category, Transaction, TransactionAttachment, Profile } from '
 import { formatTransactionNumber, calculateAccountBalances } from '@/lib/finance-math';
 import { TransactionInput, AccountInput, CategoryInput } from '@/lib/validations/finance';
 
+const DB_DIR = path.join(process.cwd(), 'data');
+const DB_PATH = path.join(DB_DIR, 'finance.db');
+
+type DatabaseSyncType = any;
 let _dbInstance: any = null;
 
 export function getDb(): any {

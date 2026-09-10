@@ -3,8 +3,20 @@ import { financeDb } from '@/lib/db';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { BrandIdentity } from '@/components/common/BrandIdentity';
 
+import { BrandIdentityConfig } from '@/types/finance';
+
 export default async function LoginPage() {
-  const brand = await financeDb.getBrandIdentity();
+  let brand: BrandIdentityConfig = {
+    appName: 'Al-Misykat',
+    appSubtitle: 'Keuangan Pesantren',
+    logoUrl: null,
+  };
+
+  try {
+    brand = await financeDb.getBrandIdentity();
+  } catch (err) {
+    console.error('Failed to load brand identity for login page:', err);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-warm p-4">

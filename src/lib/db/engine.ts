@@ -12,18 +12,25 @@ type DatabaseSyncType = any;
 let _dbInstance: any = null;
 
 export function getDb(): any {
+  if (process.env.DATABASE_DRIVER !== 'local' && (process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL))) {
+    return {
+      exec: () => {},
+      prepare: () => ({ all: () => [], get: () => null, run: () => ({ changes: 0, lastInsertRowid: 0 }) }),
+    };
+  }
   if (_dbInstance) return _dbInstance;
 
-  const require = createRequire(import.meta.url);
-  const { DatabaseSync } = require('node:sqlite');
+  try {
+    const require = createRequire(import.meta.url);
+    const { DatabaseSync } = require('node:sqlite');
 
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-  }
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
 
-  const db = new DatabaseSync(DB_PATH);
-  db.exec('PRAGMA foreign_keys = ON;');
-  db.exec('PRAGMA busy_timeout = 5000;');
+    const db = new DatabaseSync(DB_PATH);
+    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec('PRAGMA busy_timeout = 5000;');
 
   // Initialize schema
   db.exec(`
@@ -192,6 +199,13 @@ export function getDb(): any {
 
   _dbInstance = db;
   return db;
+  } catch (err) {
+    console.error('Failed to initialize local SQLite database:', err);
+    return {
+      exec: () => {},
+      prepare: () => ({ all: () => [], get: () => null, run: () => ({ changes: 0, lastInsertRowid: 0 }) }),
+    };
+  }
 }
 
 export interface AttachmentPayload {
@@ -202,10 +216,8 @@ export interface AttachmentPayload {
 }
 
 export class FinanceRepository {
-  private db: DatabaseSyncType;
-
-  constructor() {
-    this.db = getDb();
+  private get db(): any {
+    return getDb();
   }
 
   // Accounts
